@@ -1,0 +1,4 @@
+common --symlink_prefix=.bazel/
+
+# Required for oci_load, which relies on 'external/'
+common --legacy_external_runfiles

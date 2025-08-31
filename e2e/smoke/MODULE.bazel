@@ -1,0 +1,32 @@
+module(name = "rules_runc_e2e_smoke")
+
+bazel_dep(name = "rules_runc")
+local_path_override(
+    module_name = "rules_runc",
+    path = "../..",
+)
+
+bazel_dep(name = "rules_oci", version = "2.2.6")
+single_version_override(
+    module_name = "rules_oci",
+    patches = ["//:patches/rules_oci_flexible_loader.patch"],
+    patch_strip = 1,
+)
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+oci.pull(
+    name = "alpine",
+    digest = "sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1",
+    image = "docker.io/library/alpine",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
+    tag = "3.22.1",
+)
+use_repo(
+    oci,
+    "alpine",
+    "alpine_linux_amd64",
+    "alpine_linux_arm64",
+)
