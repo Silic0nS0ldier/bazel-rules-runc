@@ -14,10 +14,10 @@ if [[ $EUID -eq 0 || $USER == "root" ]]; then
 fi
 
 # TODO Because this script is used as a `data` dependency, we need to use templates for these labels
-image_loader=$(rlocation "{{image_loader_rlocation}}")
-runc_path=$(rlocation "{{runc_rlocation}}")
-undocker_path=$(rlocation "{{undocker_rlocation}}")
-jq_path=$(rlocation "{{jq_rlocation}}")
+readonly image_loader=$(rlocation "{{image_loader_rlocation}}")
+readonly runc_path=$(rlocation "{{runc_rlocation}}")
+readonly undocker_path=$(rlocation "{{undocker_rlocation}}")
+readonly jq_path=$(rlocation "{{jq_rlocation}}")
 
 # create temporary working directory for image tarball, container and runc state
 runc_instance_dir=$(mktemp -d)
@@ -35,7 +35,8 @@ IMPORT_TO_TAR_OUT="$image_tar_path" $image_loader
 echo "Writing configuration to $ctr_dir/config.json..."
 $runc_path spec --rootless --bundle "$ctr_dir"
 
-# Apply image configuration
+# Adjust image configuration
+echo "Adjusting container configuration..."
 manifest_json=$(tar -x --to-stdout -f "$image_tar_path" manifest.json)
 image_config_path=$(echo "$manifest_json" | $jq_path -r '.[0].Config')
 image_config_json=$(tar -x --to-stdout -f "$image_tar_path" "$image_config_path")
@@ -54,6 +55,14 @@ echo "Creating rootfs..."
 mkdir "${ctr_dir}/rootfs"
 echo "Extracting Docker/OCI image tarball to ${ctr_dir}/rootfs..."
 $undocker_path $image_tar_path - | tar -C "${ctr_dir}/rootfs" -xf -
+
+echo "Adding host DNS resolver configuration to container..."
+if [ -f /etc/resolv.conf ]; then
+  mkdir -p "$ctr_dir/rootfs/etc"
+  cp /etc/resolv.conf "$ctr_dir/rootfs/etc/resolv.conf"
+else
+  echo "Warning: Host /etc/resolv.conf not found, skipping copy to container"
+fi
 
 echo "Cleaning up Docker/OCI image tarball..."
 rm "$image_tar_path"
