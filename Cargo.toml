@@ -1,0 +1,13 @@
+
+[workspace]
+resolver = "3"
+members = [
+    "runc/private/container_import"
+]
+
+[workspace.package]
+edition = "2024"
+
+[workspace.dependencies]
+camino = "1.2.2"
+clap = { version = "4.5.54", features = ["derive", "env"] }

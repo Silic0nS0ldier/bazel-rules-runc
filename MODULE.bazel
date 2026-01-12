@@ -2,12 +2,16 @@ module(name = "rules_runc")
 
 # To fully update lockfile: bazel mod deps --lockfile_mode=refresh
 
+prod_mode = False
+
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.2")
 bazel_dep(name = "rules_multitool", version = "1.11.1")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_go", version = "0.59.0")
 bazel_dep(name = "rules_shell", version = "0.6.1")
 bazel_dep(name = "rules_oci", version = "2.2.7")
+bazel_dep(name = "rules_rust", version = "0.68.1", dev_dependency = prod_mode)
+bazel_dep(name = "portable_cc_toolchain", version = "2025.12.16", dev_dependency = prod_mode)
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -22,4 +26,19 @@ http_archive(
 multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
 multitool.hub(lockfile = "//:multitool.lock.json")
 use_repo(multitool, "multitool")
-# @multitool//tools/runc:toolchain_type
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust", dev_dependency = prod_mode)
+rust.toolchain(
+    edition = "2024",
+    versions = ["1.92.0"],
+)
+
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate", dev_dependency = prod_mode)
+crate.from_cargo(
+    name = "crates",
+    cargo_lockfile = "//:Cargo.lock",
+    manifests = ["//:Cargo.toml"],
+)
+use_repo(crate, "crates")
+
+toolchain = use_extension("@portable_cc_toolchain//:extensions.bzl", "toolchain", dev_dependency = prod_mode)

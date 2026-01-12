@@ -72,7 +72,7 @@ def _runc_binary_macro_impl(name, image, visibility):
         name = name + "_oci_load",
         image = image,
         repo_tags = ["latest"],
-        loader = Label(":" + "import_to_tar"),
+        loader = Label("//runc/private/container_import:container_import"),
     )
     _runc_binary_template(
         name = name + "_template",

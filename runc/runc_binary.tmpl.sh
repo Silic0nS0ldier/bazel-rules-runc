@@ -29,7 +29,7 @@ xdg_runtime_dir_override="$runc_instance_dir/xdg"
 mkdir "$xdg_runtime_dir_override"
 
 echo "Writing Docker/OCI image tarball to $image_tar_path..."
-IMPORT_TO_TAR_OUT="$image_tar_path" $image_loader
+OUTPUT="$image_tar_path" $image_loader
 
 # Create base configuration with runc
 echo "Writing configuration to $ctr_dir/config.json..."
